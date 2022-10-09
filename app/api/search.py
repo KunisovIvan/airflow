@@ -4,7 +4,7 @@ from fastapi import APIRouter
 from fastapi import BackgroundTasks
 
 from app.models import dto
-from app.redis import AsyncRedisConnector
+from app.base_redis import AsyncRedisConnector
 from app.utils import convector, search_
 
 router = APIRouter()

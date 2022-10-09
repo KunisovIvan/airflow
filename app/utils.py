@@ -1,19 +1,25 @@
 import asyncio
+import json
 import logging
 from datetime import datetime
 
 import httpx
+import redis
+import requests
+import xmltodict
 
+from app.base_redis import AsyncRedisConnector
 from app.models import dto
-from app.redis import AsyncRedisConnector
-from app.settings import APP
+from app.settings import APP, REDIS
 
 log = logging.getLogger(__name__)
 log.setLevel(logging.INFO)
 log.addHandler(logging.StreamHandler())
 
 
-async def search_(search_id: str):
+async def search_(search_id: str) -> None:
+    """Get and save results from providers."""
+
     redis = AsyncRedisConnector()
     await redis.connect()
     #
@@ -45,5 +51,20 @@ async def post_to_provider(url: str, client: httpx.AsyncClient) -> httpx.Respons
 
 
 async def convector(summ: float, current: dto.Currency, received: dto.Currency, currencies: dict) -> float:
+    """Converts currency according to the exchange rate."""
+
     heft = summ / currencies[current.value]
     return round(heft * currencies[received.value], 3)
+
+
+def update_currency_():
+    """Requests and saving exchange rates."""
+
+    r = redis.Redis(host=REDIS.HOST, port=REDIS.PORT, db=REDIS.DB, password=REDIS.PASS)
+    url = f"{APP.CURRENCY_URL}{datetime.now().strftime('%d.%m.%Y')}"
+    res = requests.get(url)
+    dict_data = xmltodict.parse(res.content)
+    currencies = dict_data.get('rates').get('item')
+    currencies = {c['title']: float(c['description']) for c in currencies}
+    currencies['KZT'] = 1.0
+    r.set("currencies_rate", json.dumps(currencies))

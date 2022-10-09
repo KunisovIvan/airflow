@@ -1,13 +1,7 @@
-import json
-from datetime import datetime
-
-import requests
-import xmltodict
 from celery import Celery
-from app import redis
 from celery.schedules import crontab
 
-from app.settings import APP, REDIS
+from app.utils import update_currency_
 
 app = Celery()
 app.config_from_object('celery_tasks.celeryconfig')
@@ -21,11 +15,6 @@ def setup_periodic_tasks(sender, **kwargs):
 
 @app.task
 def update_currency():
-    r = redis.Redis(host=REDIS.HOST, port=REDIS.PORT, db=REDIS.DB, password=REDIS.PASS)
-    url = f"{APP.CURRENCY_URL}{datetime.now().strftime('%d.%m.%Y')}"
-    res = requests.get(url)
-    dict_data = xmltodict.parse(res.content)
-    currencies = dict_data.get('rates').get('item')
-    currencies = {c['title']: float(c['description']) for c in currencies}
-    currencies['KZT'] = 1.0
-    r.set("currencies_rate", json.dumps(currencies))
+    """Requests and saving exchange rates."""
+
+    update_currency_()

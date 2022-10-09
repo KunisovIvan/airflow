@@ -14,10 +14,6 @@ class App(BaseSettings):
     CURRENCY_URL: str = os.getenv('CURRENCY_URL')
     ALLOW_ORIGINS: List[str] = ['*']
 
-    class Config:
-        env_prefix = 'APP_'
-        env_file = '.env'
-
 
 class Postgres(BaseSettings):
     DB: str = os.getenv('PG_DB')

@@ -64,6 +64,13 @@ Commit.
 
 [alembic_autogen]: https://alembic.sqlalchemy.org/en/latest/autogenerate.html
 
+## Running celery worker
+You can also embed beat inside the worker by enabling the workers -B (https://docs.celeryq.dev/en/stable/reference/cli.html#cmdoption-celery-worker-B) option, this is convenient if you’ll never run more than one worker node, but it’s not commonly used and for that reason isn’t recommended for production use
+
+```
+(.venv) $ celery -A celery_tasks.celery_app worker -B --loglevel=INFO
+```
+
 ## Running tests
 
 ```
