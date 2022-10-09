@@ -17,7 +17,7 @@ class Status(str, enum.Enum):
 
 class CurrenciesRate(BaseModel):
     currency: str
-    rate: str
+    rate: float
 
 
 class Dep(BaseModel):

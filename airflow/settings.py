@@ -20,11 +20,11 @@ class App(BaseSettings):
 
 
 class Postgres(BaseSettings):
-    DB: str = 'airflow'
-    USER: str = 'airflow'
-    PASS: str = 'airflow'
-    HOST: str = 'localhost'
-    PORT: int = 5432
+    DB: str = os.getenv('PG_DB')
+    USER: str = os.getenv('PG_USER')
+    PASS: str = os.getenv('PG_PASS')
+    HOST: str = os.getenv('PG_HOST')
+    PORT: int = os.getenv('PG_PORT')
     URL: str = None
 
     @validator('URL', pre=True)
@@ -33,7 +33,7 @@ class Postgres(BaseSettings):
             scheme='postgresql+asyncpg',
             user=values.get('USER'),
             password=values.get('PASS'),
-            host='db',
+            host=values.get('HOST'),
             port=str(values.get('PORT')),
             path=f"/{values.get('DB') or ''}",
         )
@@ -67,4 +67,4 @@ class Redis(BaseSettings):
 
 REDIS = Redis()
 APP = App()
-# PG = Postgres()
+PG = Postgres()

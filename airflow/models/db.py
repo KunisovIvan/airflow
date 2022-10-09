@@ -1,19 +1,11 @@
-from sqlmodel import SQLModel
+from sqlmodel import SQLModel, Field
 
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
 
-engine = create_async_engine(
-    'postgresql+asyncpg://user:pass@localhost:5432/db',
-    echo=True,
-    future=True
-)
+from airflow.settings import PG
 
-
-async def init_db():
-    async with engine.begin() as conn:
-        # await conn.run_sync(SQLModel.metadata.drop_all)
-        await conn.run_sync(SQLModel.metadata.create_all)
+engine = create_async_engine(PG.URL, echo=True, future=True)
 
 
 async def get_session() -> AsyncSession:
@@ -24,6 +16,7 @@ async def get_session() -> AsyncSession:
         yield session
 
 
-class CurrenciesRate(SQLModel):
+class CurrenciesRate(SQLModel, table=True):
+    id: int = Field(primary_key=True)
     currency: str
-    rate: str
+    rate: float

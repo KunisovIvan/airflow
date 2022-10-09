@@ -15,14 +15,14 @@ router = APIRouter()
 async def get_currencies(session: AsyncSession = Depends(db.get_session)) -> List[dto.CurrenciesRate]:
     result = await session.execute(select(db.CurrenciesRate))
     currencies = result.scalars().all()
-    return [dto.CurrenciesRate(currency=currency.name, rate=currency.artist) for currency in currencies]
+    return [dto.CurrenciesRate(currency=c.currency, rate=c.rate) for c in currencies]
 
 
 @router.post("/currency")
 async def add_currencies(
         currency_rate: dto.CurrenciesRate, session: AsyncSession = Depends(db.get_session)
 ) -> dto.CurrenciesRate:
-    currency = db.CurrenciesRate(name=currency_rate.currency, artist=currency_rate.rate)
+    currency = db.CurrenciesRate(currency=currency_rate.currency, rate=currency_rate.rate)
     session.add(currency)
     await session.commit()
     await session.refresh(currency)
