@@ -1,11 +1,13 @@
+import asyncio
 from datetime import datetime
 
 import requests
 import xmltodict
-
 from celery import Celery
-from celery.schedules import crontab
+from sqlmodel.orm import session
 
+from airflow.api.db import add_currencies
+from airflow.models import dto
 from airflow.settings import APP
 
 app = Celery()
@@ -24,6 +26,10 @@ def setup_periodic_tasks(sender, **kwargs):
     # )
 
 
+async def async_task():
+    await asyncio.sleep(5)
+
+
 @app.task
 def update_currency():
     url = f"{APP.CURRENCY_URL}{datetime.now().strftime('%d.%m.%Y')}"
@@ -32,5 +38,5 @@ def update_currency():
     currencies = dict_data.get('rates').get('item')
     currencies = {c['title']: float(c['description']) for c in currencies}
     currencies['KZT'] = 1.0
-    # redis = await aioredis.from_url("redis://localhost", password='q1w2e3r4', db=1)
-    # await redis.set('currency', json.dumps(currencies))
+    c = dto.CurrenciesRate(currency='KZT', rate=44.56)
+    asyncio.run(add_currencies(c))
