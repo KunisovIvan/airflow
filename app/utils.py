@@ -3,7 +3,7 @@ from datetime import datetime
 
 import httpx
 
-from airflow.models import dto
+from app.models import dto
 
 log = logging.getLogger(__name__)
 log.setLevel(logging.INFO)

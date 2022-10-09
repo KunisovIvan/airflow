@@ -1,13 +1,51 @@
 import enum
 import json
-from typing import List
+from typing import List, Union
 
 from pydantic import BaseModel
 
 
 class Currency(str, enum.Enum):
-    eur = 'EUR'
-    kzt = 'KZT'
+     AUD = 'AUD'
+     AZN = 'AZN'
+     AMD = 'AMD'
+     BYN = 'BYN'
+     BRL = 'BRL'
+     HUF = 'HUF'
+     HKD = 'HKD'
+     GEL = 'GEL'
+     DKK = 'DKK'
+     AED = 'AED'
+     USD = 'USD'
+     EUR = 'EUR'
+     INR = 'INR'
+     IRR = 'IRR'
+     CAD = 'CAD'
+     CNY = 'CNY'
+     KWD = 'KWD'
+     KGS = 'KGS'
+     MYR = 'MYR'
+     MXN = 'MXN'
+     MDL = 'MDL'
+     NOK = 'NOK'
+     PLN = 'PLN'
+     SAR = 'SAR'
+     RUB = 'RUB'
+     XDR = 'XDR'
+     SGD = 'SGD'
+     TJS = 'TJS'
+     THB = 'THB'
+     TRY = 'TRY'
+     UZS = 'UZS'
+     UAH = 'UAH'
+     GBP = 'GBP'
+     CZK = 'CZK'
+     SEK = 'SEK'
+     CHF = 'CHF'
+     ZAR = 'ZAR'
+     KRW = 'KRW'
+     JPY = 'JPY'
+     KZT = 'KZT'
 
 
 class Status(str, enum.Enum):
@@ -47,10 +85,16 @@ class Flight(BaseModel):
     segments: List[Segment]
 
 
+class Price(BaseModel):
+    amount: str
+    currency: str
+
+
 class Flights(BaseModel):
     flights: List[Flight]
     refundable: bool = False
     validating_airline: str = None
+    price: Price = None
     pricing: Pricing
 
 
@@ -69,15 +113,15 @@ class Results(BaseModel):
         self.items = sorted(self.items, key=lambda f: float(f.pricing.total), reverse=reverse)
         return self
 
-    def prepare_to_redis(self, value: str, res: dict) -> 'Results':
+    def prepare_to_redis(self, value: Union[dict, None], res: dict) -> 'Results':
         """Preparing data for saving to Radis (updating/creating items by key: search_id)."""
 
         if value:
-            return self.parse_obj({'search_id': self.search_id, 'items': json.loads(value)['items'] + res})
+            return self.parse_obj({'search_id': self.search_id, 'items': value['items'] + res})
         else:
             return self.parse_obj({'search_id': self.search_id, 'items': res})
 
-    def set_status(self, value: str, status: Status) -> 'Results':
+    def set_status(self, value: Union[dict, None], status: Status) -> 'Results':
         """Preparing data for setting the status of an entry in a radis (updating field status)."""
 
-        return self.parse_obj({'search_id': self.search_id, 'status': status, 'items': json.loads(value)['items']})
+        return self.parse_obj({'search_id': self.search_id, 'status': status, 'items': value['items'] if value else []})

@@ -1,15 +1,14 @@
 import asyncio
 import json
-import os
 import uuid
 
-import aioredis
 import httpx
 from fastapi import APIRouter
 
-from airflow.models import dto
-from airflow.settings import REDIS, APP
-from airflow.utils import post_to_provider, convector
+from app.models import dto
+from app.redis import AsyncRedisConnector
+from app.settings import APP
+from app.utils import post_to_provider, convector
 
 router = APIRouter()
 
@@ -22,7 +21,8 @@ router = APIRouter()
 )
 async def search() -> dto.SearchRes:
     search_id = str(uuid.uuid4())
-    redis = await aioredis.from_url("redis://localhost", password=REDIS.PASS, db=REDIS.DB)
+    redis = AsyncRedisConnector()
+    await redis.connect()
     #
     async with httpx.AsyncClient() as client:
         #
@@ -32,14 +32,14 @@ async def search() -> dto.SearchRes:
         #
         for task in tasks:
             res = await task
-            value = await redis.get(search_id)
+            value = await redis.get_key(search_id)
             #
             data = dto.Results(search_id=search_id).prepare_to_redis(value=value, res=res.json())
-            await redis.setex(search_id, 600, data.json())
+            await redis.set_key(search_id, data.json(), ttl=300)
     #
-    value = await redis.get(search_id)
+    value = await redis.get_key(search_id)
     data = dto.Results(search_id=search_id).set_status(value=value, status=dto.Status.completed)
-    await redis.setex(search_id, 600, data.json())
+    await redis.set_key(search_id, data.json(), ttl=300)
     #
     return dto.SearchRes(search_id=search_id)
 
@@ -51,12 +51,13 @@ async def search() -> dto.SearchRes:
     response_model=dto.Results
 )
 async def results(search_id: str, currency: dto.Currency) -> dto.Results:
-    redis = await aioredis.from_url("redis://localhost", password=os.getenv('REDIS_PASS'), db=1)
-    value = await redis.get(search_id)
-    currencies = await redis.get('currency')
+    redis = AsyncRedisConnector()
+    await redis.connect()
+    value = await redis.get_key(search_id)
+    currencies = await redis.get_key('currencies_rate')
     #
-    if value:
-        data = dto.Results.parse_raw(value)
+    if value and currencies:
+        data = dto.Results.parse_obj(value)
         #
         for flights in data.items:
             current_currency = flights.pricing.currency
@@ -65,10 +66,11 @@ async def results(search_id: str, currency: dto.Currency) -> dto.Results:
                     summ=float(flights.pricing.total),
                     current=currency,
                     received=current_currency,
-                    currencies=json.loads(currencies),
+                    currencies=currencies,
                 )
-                flights.pricing.total = total
-                flights.pricing.currency = currency
+                flights.price = dto.Price(amount=str(total), currency=currency)
+            else:
+                flights.price = dto.Price(amount=flights.pricing.total, currency=currency)
         #
         data = data.sorted_by_price(reverse=True)
         #

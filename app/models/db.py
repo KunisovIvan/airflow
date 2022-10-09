@@ -3,7 +3,7 @@ from sqlmodel import SQLModel, Field
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
 
-from airflow.settings import PG
+from app.settings import PG
 
 engine = create_async_engine(PG.URL, echo=True, future=True)
 

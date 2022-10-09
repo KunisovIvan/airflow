@@ -1,12 +1,12 @@
 #!/usr/bin/env python
 import uvicorn
 
-from airflow.settings import APP
+from app.settings import APP
 
 if __name__ == "__main__":
 
     uvicorn.run(
-        'airflow.app:app',
+        'app.fastapi_app:app',
         proxy_headers=True,
         forwarded_allow_ips=APP.ALLOW_ORIGINS,
         host=str(APP.HOST.ip),

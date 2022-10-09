@@ -48,21 +48,6 @@ class Redis(BaseSettings):
     PORT: int = os.getenv('REDIS_PORT')
     DB: int = os.getenv('REDIS_DB')
     PASS: str = os.getenv('REDIS_PASS')
-    URL: str = None
-
-    @validator('URL', pre=True)
-    def url(cls, _, values):
-        return RedisDsn.build(
-            scheme='redis',
-            password=values.get('PASS'),
-            host=values.get('HOST'),
-            port=str(values.get('PORT')),
-            path=f"/{values.get('DB') or ''}",
-        )
-
-    class Config:
-        env_prefix = 'REDIS_'
-        env_file = '.env'
 
 
 REDIS = Redis()
