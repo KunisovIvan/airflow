@@ -2,11 +2,12 @@
 
 ## Postgres Docker
  
-Start PostgresDB in docker container:
+Start PostgresDB and Redis in docker container:
 
 0. Copy `.env.example` file to `.env` and correct variables
+1. In file `app/settings.py` file correct `APP.PROVIDER_URLS`
 
-1. Start containers:
+2. Start containers:
 
     ```
     $ docker-compose -f docker-compose.yml up -d
@@ -69,10 +70,4 @@ You can also embed beat inside the worker by enabling the workers -B (https://do
 
 ```
 (.venv) $ celery -A celery_tasks.celery_app worker -B --loglevel=INFO
-```
-
-## Running tests
-
-```
-(.venv) $ pytest tests/test_{file}.py --{method}
 ```
