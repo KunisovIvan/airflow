@@ -8,19 +8,23 @@ load_dotenv(verbose=True)
 
 
 class App(BaseSettings):
-    HOST: IPvAnyInterface = os.getenv('APP_HOST')
-    PORT: int = os.getenv('APP_PORT')
+    HOST: IPvAnyInterface
+    PORT: int
     PROVIDER_URLS: List[str] = ['http://localhost:8000', 'http://localhost:8001']
     CURRENCY_URL: str = os.getenv('CURRENCY_URL')
     ALLOW_ORIGINS: List[str] = ['*']
 
+    class Config:
+        env_prefix = 'APP_'
+        env_file = '.env'
+
 
 class Postgres(BaseSettings):
-    DB: str = os.getenv('PG_DB')
-    USER: str = os.getenv('PG_USER')
-    PASS: str = os.getenv('PG_PASS')
-    HOST: str = os.getenv('PG_HOST')
-    PORT: int = os.getenv('PG_PORT')
+    DB: str
+    USER: str
+    PASS: str
+    HOST: str
+    PORT: int
     URL: str = None
 
     @validator('URL', pre=True)
@@ -40,10 +44,14 @@ class Postgres(BaseSettings):
 
 
 class Redis(BaseSettings):
-    HOST: str = os.getenv('REDIS_HOST')
-    PORT: int = os.getenv('REDIS_PORT')
-    DB: int = os.getenv('REDIS_DB')
-    PASS: str = os.getenv('REDIS_PASS')
+    HOST: str
+    PORT: int
+    DB: int
+    PASS: str
+
+    class Config:
+        env_prefix = 'REDIS_'
+        env_file = '.env'
 
 
 REDIS = Redis()

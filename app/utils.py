@@ -17,12 +17,9 @@ log.setLevel(logging.INFO)
 log.addHandler(logging.StreamHandler())
 
 
-async def search_(search_id: str) -> None:
+async def search_(redis: AsyncRedisConnector, search_id: str) -> None:
     """Get and save results from providers."""
 
-    redis = AsyncRedisConnector()
-    await redis.connect()
-    #
     async with httpx.AsyncClient() as client:
         #
         tasks = []

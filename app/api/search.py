@@ -1,10 +1,9 @@
 import uuid
 
 from fastapi import APIRouter
-from fastapi import BackgroundTasks
+from fastapi import BackgroundTasks, Request
 
 from app.models import dto
-from app.base_redis import AsyncRedisConnector
 from app.utils import convector, search_
 
 router = APIRouter()
@@ -16,9 +15,9 @@ router = APIRouter()
     summary='Get and save results from providers',
     response_model=dto.SearchRes
 )
-async def search(background_tasks: BackgroundTasks) -> dto.SearchRes:
+async def search(request: Request, background_tasks: BackgroundTasks) -> dto.SearchRes:
     search_id = str(uuid.uuid4())
-    background_tasks.add_task(search_, search_id)
+    background_tasks.add_task(search_, request.app.state.redis, search_id)
     return dto.SearchRes(search_id=search_id)
 
 
@@ -28,9 +27,8 @@ async def search(background_tasks: BackgroundTasks) -> dto.SearchRes:
     summary='Get search results by search_id',
     response_model=dto.Results
 )
-async def results(search_id: str, currency: dto.Currency) -> dto.Results:
-    redis = AsyncRedisConnector()
-    await redis.connect()
+async def results(request: Request, search_id: str, currency: dto.Currency) -> dto.Results:
+    redis = request.app.state.redis
     value = await redis.get_key(search_id)
     currencies = await redis.get_key('currencies_rate')
     #
